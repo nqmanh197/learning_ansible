@@ -1,0 +1,24 @@
+- name: Deploy Database
+  become: yes
+  hosts: db
+  vars:
+    mysql_package: "{{ 'mysql-server' if ansible_os_family == 'Debian' else 'mariadb-server' }}"
+    mysql_service: "{{ 'mysql' if ansible_os_family == 'Debian' else 'mariadb' }}"
+  
+  tasks:
+    - name: Install MySQL or MariaDB
+      package:
+        name: "{{ mysql_package }}"
+        state: present
+
+    - name: Ensure MySQL/MariaDB service is running
+      systemd:
+        name: "{{ mysql_service }}"
+        state: started
+        enabled: yes
+      register: mysql_service_status
+
+    - name: Debug MySQL/MariaDB service status
+      debug:
+        msg: "{{ mysql_service }} is {{ 'running' if mysql_service_status.status.ActiveState == 'active' else 'not running' }}"
+

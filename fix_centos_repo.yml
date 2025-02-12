@@ -1,0 +1,27 @@
+---
+- name: Fix CentOS repository URLs
+  hosts: centos
+  become: yes
+  vars_files:
+    - ~./.ansible/.ansible_become_pass
+  tasks:
+    - name: Disable mirrorlist
+      replace:
+        path: /etc/yum.repos.d/CentOS-Base.repo
+        regexp: '^mirrorlist='
+        replace: '#mirrorlist='
+        backup: yes
+      
+    - name: Update baseurl to vault.centos.org
+      replace:
+        path: /etc/yum.repos.d/CentOS-Base.repo
+        regexp: '^#baseurl=http://mirror.centos.org'
+        replace: 'baseurl=http://vault.centos.org'
+        backup: yes
+      
+    - name: Verify changes
+      command: grep -E 'mirrorlist=|baseurl=' /etc/yum.repos.d/CentOS-Base.repo
+      register: repo_check
+
+    - debug:
+        var: repo_check.stdout_lines
